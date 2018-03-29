@@ -26,6 +26,12 @@ $ gcloud auth list
 python ./script/transcribe_streaming_mic.py 
 ~~~
 
+## HotRef
+~~~
+$ lsusb
+$ export GOOGLE_APPLICATION_CREDENTIALS='/home/nvidia/My Project 31035-185bec02f0ba.json'
+~~~
+
 ## some error
 TODO qiitaへの自作メモにリンク貼っとけ
 DefaultCredentialsError

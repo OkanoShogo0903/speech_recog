@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 # Copyright 2017 Google Inc. All Rights Reserved.
@@ -14,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Google Cloud Speech API sample application using the streaming API.
+"""
+Google Cloud Speech API sample application using the streaming API.
 
 NOTE: This module requires the additional dependency `pyaudio`. To install
 using pip:
@@ -36,12 +38,18 @@ from google.cloud.speech import enums
 from google.cloud.speech import types
 import pyaudio
 from six.moves import queue
+import json
+
+#from datetime import datetime
+import threading
+from time import sleep
 # [END import_libraries]
 
 # Audio recording parameters
 RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
+is_loop_active = False
 
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
@@ -65,10 +73,9 @@ class MicrophoneStream(object):
             # This is necessary so that the input device's buffer doesn't
             # overflow while the calling thread makes network requests, etc.
             stream_callback=self._fill_buffer,
+            input_device_index=7
         )
-
         self.closed = False
-
         return self
 
     def __exit__(self, type, value, traceback):
@@ -124,70 +131,85 @@ def listen_print_loop(responses):
     the next result to overwrite it, until the response is a final one. For the
     final one, print a newline to preserve the finalized transcription.
     """
-    num_chars_printed = 0
-    for response in responses:
-        if not response.results:
-            continue
 
-        # The `results` list is consecutive. For streaming, we only care about
-        # the first result being considered, since once it's `is_final`, it
-        # moves on to considering the next utterance.
-        result = response.results[0]
-        if not result.alternatives:
-            continue
+    # sleepしてる間も、responsesに録音されたデータは蓄積されていくので改善する
+    # sleep(5)
+    if not is_loop_active:
+        print("spleepy")
+        sleep(0.1)
+    else:
+        # ネット繋がっていない時は、forの部分で止まるようになっている。エラーは出ない。
+        for response in responses:
+            # speechが有効でない時はcontinue
+            print(" ********************** ")
+            print(responses)
+            print(response)
+            if not response.results:
+                continue
 
-        # Display the transcription of the top alternative.
-        transcript = result.alternatives[0].transcript
+            # The `results` list is consecutive. For streaming, we only care about
+            # the first result being considered, since once it's `is_final`, it
+            # moves on to considering the next utterance.
+            result = response.results[0]
+            if not result.alternatives:
+                continue
 
-        # Display interim results, but with a carriage return at the end of the
-        # line, so subsequent lines will overwrite them.
-        #
-        # If the previous result was longer than this one, we need to print
-        # some extra spaces to overwrite the previous result
-        overwrite_chars = ' ' * (num_chars_printed - len(transcript))
+            # Display the transcription of the top alternative.
+            transcript = result.alternatives[0].transcript
 
-        if not result.is_final:
-            sys.stdout.write(transcript + overwrite_chars + '\r')
-            sys.stdout.flush()
+            if not result.is_final:
+                print("1")
 
-            num_chars_printed = len(transcript)
-
-        else:
-            print(transcript + overwrite_chars)
-
-            # Exit recognition if any of the transcribed phrases could be
-            # one of our keywords.
-            if re.search(r'\b(exit|quit)\b', transcript, re.I):
-                print('Exiting..')
+            else:
+                print("2")
+                print(transcript)
+                
+                # TODO ここでmasterにtranscriptを投げる！！！
+                
                 break
-
-            num_chars_printed = 0
 
 
 def main():
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
+
+    # English(America)      en-US
+    # English(Canadian)     en-CA
+    # Englisha(British)     en-GB
+    # Japan                 ja-JP
     language_code = 'ja-JP'  # a BCP-47 language tag
 
     client = speech.SpeechClient()
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,
-        language_code=language_code)
+        language_code=language_code,
+#        speechContexts={"phrases":["Follow"]}
+    )
     streaming_config = types.StreamingRecognitionConfig(
         config=config,
         interim_results=True)
-
+    # single_utterance (default false):
+    #   音声が出力されなくなったら自動的にリクエストを終了するかの設定
     with MicrophoneStream(RATE, CHUNK) as stream:
         audio_generator = stream.generator()
         requests = (types.StreamingRecognizeRequest(audio_content=content)
                     for content in audio_generator)
 
         responses = client.streaming_recognize(streaming_config, requests)
-
+        
         # Now, put the transcription responses to use.
+        print("hello")
         listen_print_loop(responses)
+        print("good bay")
 
 
 if __name__ == '__main__':
-    main()
+        is_loop_active = True
+
+try:
+        main()
+except:
+    import traceback
+    traceback.print_exc()
+
