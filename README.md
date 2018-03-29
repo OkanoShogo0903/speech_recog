@@ -13,3 +13,7 @@ gcloud auth login
 ~~~
 python ./script/transcribe_streaming_mic.py 
 ~~~
+
+## some error
+TODO qiitaへの自作メモにリンク貼っとけ
+DefaultCredentialsError
