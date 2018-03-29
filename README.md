@@ -1,5 +1,6 @@
 # WellCome to Speech Recog
 GoogleSpeechAPIを使った音声認識APIを利用するプログラムをおいておいてあります
+python2.7とpython3.4の両方に対応するように書いてます
 ## Install
 GoogleのSDKを利用するので、そのインストールをする
 ~~~
@@ -10,5 +11,5 @@ gcloud auth login
 ~~~
 ## Using
 ~~~
-python script/transcribe_streaming_mic.py 
+python ./script/transcribe_streaming_mic.py 
 ~~~
