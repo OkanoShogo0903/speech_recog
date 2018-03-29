@@ -73,10 +73,12 @@ class MicrophoneStream(object):
             # This is necessary so that the input device's buffer doesn't
             # overflow while the calling thread makes network requests, etc.
             stream_callback=self._fill_buffer,
+#			input_device_index=0,
         )
 
         self.closed = False
 
+		print(self._audio_stream.input_device_index)
         return self
 
     def __exit__(self, type, value, traceback):
