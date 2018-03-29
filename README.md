@@ -4,10 +4,13 @@ python2.7とpython3.4の両方に対応するように書いてます
 ## Install
 GoogleのSDKを利用するので、そのインストールをする
 ~~~
-curl https://sdk.cloud.google.com | bash
-exec -l $SHELL
-gcloud version
-gcloud auth login
+$ pip install --upgrade google-cloud-speech
+$ gcloud auth application-default login
+
+$ curl https://sdk.cloud.google.com | bash
+$ exec -l $SHELL
+$ gcloud version
+$ gcloud auth login
 ~~~
 ## Using
 ~~~
