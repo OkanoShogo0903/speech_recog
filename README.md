@@ -15,6 +15,11 @@ $ gcloud auth login
 $ gcloud auth list
 
 ~~~
+あと、GOOGLE_APPLICATION_CREDENTIALSの設定
+[このページ](https://qiita.com/j-un/items/dc46b3b766a7afb4080c)を参照
+~~~
+/tmp/mozilla_nvidia0/**鍵の名前**
+~~~
 
 ## Using
 ~~~
