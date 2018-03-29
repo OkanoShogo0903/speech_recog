@@ -207,10 +207,11 @@ def main():
 
 
 if __name__ == '__main__':
-	is_loop_active = True
+        is_loop_active = True
 
 try:
-	main()
+        main()
 except:
-	print("callback")
+    import traceback
+    traceback.print_exc()
 
