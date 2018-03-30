@@ -1,18 +1,18 @@
 # WellCome to Speech Recog
 GoogleSpeechAPIを使った音声認識APIを利用するプログラムをおいておいてあります
-python2.7とpython3.4の両方に対応するように書いてます
+python2.7とpython3.4の両方に対応するようになっている（はず）
 
 ## Install
 GoogleのSDKを利用するので、そのインストールをする
 ~~~
-$ sudo pip install --upgrade google-cloud-speech
-$ gcloud auth application-default login
-
 $ curl https://sdk.cloud.google.com | bash
 $ exec -l $SHELL
 $ gcloud version
 $ gcloud auth login
 $ gcloud auth list
+
+$ sudo pip install --upgrade google-cloud-speech
+$ gcloud auth application-default login
 
 ~~~
 あと、GOOGLE_APPLICATION_CREDENTIALSの設定
@@ -23,7 +23,8 @@ $ gcloud auth list
 
 ## Using
 ~~~
-python ./script/transcribe_streaming_mic.py 
+$ cd speech_recog
+$ python ./script/transcribe_streaming_mic.py 
 ~~~
 
 ## HotRef
