@@ -31,6 +31,8 @@ from __future__ import division
 
 import re
 import sys
+import rospy
+from std_msgs.msg import String
 
 from google.cloud import speech
 from google.cloud.speech import enums
@@ -43,17 +45,21 @@ from six.moves import queue
 RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
+speech_loop = 'Null'
+
+voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
 
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
-    def __init__(self, rate, chunk):
+        
+    def __init__(self, rate, chunk):               
         self._rate = rate
         self._chunk = chunk
 
         # Create a thread-safe buffer of audio data
         self._buff = queue.Queue()
         self.closed = True
-
+       
     def __enter__(self):
         self._audio_interface = pyaudio.PyAudio()
         self._audio_stream = self._audio_interface.open(
@@ -125,6 +131,8 @@ def listen_print_loop(responses):
     the next result to overwrite it, until the response is a final one. For the
     final one, print a newline to preserve the finalized transcription.
     """
+
+    global speech_loop
     num_chars_printed = 0
     for response in responses:
         if not response.results:
@@ -157,6 +165,8 @@ def listen_print_loop(responses):
         else:
             print("result")
             print(transcript + overwrite_chars)
+
+            voice_pub.publish(transcript)
             
             # TODO ****ここでtranscriptを渡す******
 
@@ -167,9 +177,13 @@ def listen_print_loop(responses):
             #    break
 
             num_chars_printed = 0
-
-
-def main():
+            
+        if speech_loop == 'stop':
+            print("****break*****")
+            speech_loop = 'Null'
+            break
+            
+def main(request):
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
     language_code = 'ja-JP'  # a BCP-47 language tag
@@ -192,7 +206,16 @@ def main():
 
         # Now, put the transcription responses to use.
         listen_print_loop(responses)
-
+        
+def CB(request):
+    global speech_loop
+    speech_loop = request.data
+    
+google_start_sub = rospy.Subscriber('google_req/start',String,main)
+google_stop_sub = rospy.Subscriber('google_req/stop',String,CB)
 
 if __name__ == '__main__':
-    main()
+    rospy.init_node('speech_recog')
+    rospy.spin()
+
+                        
