@@ -188,9 +188,9 @@ def main(request):
     # for a list of supported languages.
     language_code = 'ja-JP'  # a BCP-47 language tag
     client = speech.SpeechClient()
-    speech_contexts = speech.SpeechContext(
-            phrases=["kitchen", "living", "entrance", "bedroom", "dining", "bikkle", "cupnoodle", "finish", "Follow"]
-            )
+    speech_contexts = [speech.types.SpeechContext(
+        phrases=["kitchen", "living", "entrance", "bedroom", "dining", "bikkle", "cupnoodle", "finish", "Follow"]
+    )]
 
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
