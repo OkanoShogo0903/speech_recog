@@ -187,12 +187,17 @@ def main(request):
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
     language_code = 'ja-JP'  # a BCP-47 language tag
-
     client = speech.SpeechClient()
+    speech_contexts = speech.SpeechContext(
+            phrases=["kitchen", "living", "entrance", "bedroom", "dining", "bikkle", "cupnoodle", "finish", "Follow"]
+            )
+
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,
-        language_code=language_code)
+        language_code=language_code,
+        speech_contexts=speech_contexts
+        )
     streaming_config = types.StreamingRecognitionConfig(
         config=config,
         interim_results=True)
