@@ -1,0 +1,80 @@
+Traceback (most recent call last):
+  File "transcribe_streaming_mic.py", line 202, in <module>
+    main()
+  File "transcribe_streaming_mic.py", line 198, in main
+    listen_print_loop(responses)
+  File "transcribe_streaming_mic.py", line 129, in listen_print_loop
+    for response in responses:
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/grpc/_channel.py", line 347, in __next__
+    return self._next()
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/google/api_core/grpc_helpers.py", line 56, in error_remapped_callable
+    six.raise_from(exceptions.from_grpc_error(exc), exc)
+  File "<string>", line 3, in raise_from
+
+********************************************************************
+
+Traceback (most recent call last):
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/google/api_core/grpc_helpers.py", line 54, in error_remapped_callable
+    return callable_(*args, **kwargs)
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/grpc/_channel.py", line 341, in _next
+    raise self
+grpc._channel._Rendezvous: <_Rendezvous of RPC that terminated with (StatusCode.INVALID_ARGUMENT, Client GRPC deadline too short. Should be at least: 3 * audio-duration + 5 seconds. Current deadline is: 189.99228346720338 second(s). Required at least: 196 second(s).)>
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "transcribe_streaming_mic.py", line 202, in <module>
+    main()
+  File "transcribe_streaming_mic.py", line 198, in main
+    listen_print_loop(responses)
+  File "transcribe_streaming_mic.py", line 129, in listen_print_loop
+    for response in responses:
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/grpc/_channel.py", line 347, in __next__
+    return self._next()
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/google/api_core/grpc_helpers.py", line 56, in error_remapped_callable
+    six.raise_from(exceptions.from_grpc_error(exc), exc)
+  File "<string>", line 3, in raise_from
+google.api_core.exceptions.InvalidArgument: 400 Client GRPC deadline too short. Should be at least: 3 * audio-duration + 5 seconds. Current deadline is: 189.99228346720338 second(s). Required at least: 196 second(s).
+
+*********************************************************************
+ ********************** 
+<_Rendezvous object of in-flight RPC>
+error {
+  code: 3
+  message: "Invalid audio content: too long."
+}
+
+ ********************** 
+<_Rendezvous object of in-flight RPC>
+results {
+  alternatives {
+    transcript: "\343\203\217\343\203\255\343\203\274\343\203\217\343\203\255\343\203\274"
+    confidence: 0.9000584483146667
+  }
+  is_final: true
+}
+
+*********************************************************************
+Traceback (most recent call last):
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/google/api_core/grpc_helpers.py", line 54, in error_remapped_callable
+    return callable_(*args, **kwargs)
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/grpc/_channel.py", line 341, in _next
+    raise self
+grpc._channel._Rendezvous: <_Rendezvous of RPC that terminated with (StatusCode.DEADLINE_EXCEEDED, Deadline Exceeded)>
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "transcribe_streaming_mic.py", line 198, in <module>
+    main()
+  File "transcribe_streaming_mic.py", line 194, in main
+    listen_print_loop(responses)
+  File "transcribe_streaming_mic.py", line 129, in listen_print_loop
+    for response in responses:
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/grpc/_channel.py", line 347, in __next__
+    return self._next()
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/google/api_core/grpc_helpers.py", line 56, in error_remapped_callable
+    six.raise_from(exceptions.from_grpc_error(exc), exc)
+  File "<string>", line 3, in raise_from
+google.api_core.exceptions.DeadlineExceeded: 504 Deadline Exceeded
+
