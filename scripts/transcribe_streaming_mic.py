@@ -134,7 +134,9 @@ def listen_print_loop(responses):
 
     global speech_loop
     num_chars_printed = 0
+    print("*** listen_print_loop ***")
     for response in responses:
+        print("**********************")
         if not response.results:
             continue
 
