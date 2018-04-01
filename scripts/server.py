@@ -2,7 +2,7 @@
 import socket
 
 def main():
-    ip = "192.168.11.6"
+    ip = "192.168.11.6" # show_ipでホスト側のipを調べてここに設定する
     #ip = "localhost"
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((ip, 50007))    # 指定したホスト(IP)とポートをソケットに設定
@@ -11,13 +11,13 @@ def main():
     print("Conneted by"+str(addr))  #サーバ側の合図
 
     while (1):
-        data = raw_input("Server>") # 入力待機(サーバー側)
-        soc.send(data)              # ソケットにデータを送信
-        data = soc.recv(1024)       # データを受信（1024バイトまで）
-        print ("Client>",data)        # サーバー側の書き込みを表示
+        data = raw_input("Client>") # 入力待機
+        soc.send(data)              # ソケットに入力したデータを送信
+
         if data == "q":             # qが押されたら終了
             soc.close()
             break
+
 
 if __name__ == '__main__':
     main()
