@@ -2,7 +2,7 @@
 import socket
 
 def main():
-    ip = "192.168.11.6" # show_ipでホスト側のipを調べてここに設定する
+    ip = "192.168.11.2" # show_ipでホスト側のipを調べてここに設定する
     #ip = "localhost"
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((ip, 50007))    # 指定したホスト(IP)とポートをソケットに設定

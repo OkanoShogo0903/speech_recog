@@ -2,7 +2,7 @@
 import socket
 
 def main():
-    ip = "192.168.11.6" # show_ipでホスト側のipを調べてここに設定する
+    ip = "192.168.11.2" # show_ipでサーバー側のipを調べてここに設定する
 
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     soc.connect((ip, 50007))
