@@ -15,9 +15,11 @@ def main():
 
     while(1):
         data = soc.recv(4096).decode('utf-8')       # データを受信（1024バイトまで）
-        print "Client>",data        # サーバー側の書き込みを表示
-        pub.publish(data)
-        if data == "q":             # qが押されたら終了
+        if data != "":
+            print "Client > ",data        # サーバー側の書き込みを表示
+            pub.publish(data)
+        else:
+            print "音声認識のサーバー側が終了しました"
             soc.close()
             break
 

@@ -156,30 +156,38 @@ def listen_print_loop(responses):
             overwrite_chars = ' ' * (num_chars_printed - len(transcript))
 
             if not result.is_final:
-                sys.stdout.write(transcript + overwrite_chars + '\r')
+                sys.stdout.write('\r' + transcript + overwrite_chars)
                 sys.stdout.flush()
 
                 num_chars_printed = len(transcript)
 
             else:
+                print("****** finish ******")
                 print(transcript + overwrite_chars)
 
                 # 音声認識した結果をROSに送る
                 server.send_message(transcript)
 
-                # Exit recognition if any of the transcribed phrases could be
-                # one of our keywords.
-                #if re.search(r'\b(exit|quit)\b', transcript, re.I):
-                #    print('Exiting..')
-                #    break
+                # 一回認識するごとに音声認識をリセットする
                 break
 
                 num_chars_printed = 0
 
-    except not KeyboardInterrupt:
-        ''' <Ctrl-c>押された時以外の例外が起きても処理は続行する '''
-        import traceback
-        traceback.print_exc()
+    #except ServiceUnavailable as google_err:
+    #    print(google_err.headers)  # Dump the headers to see
+    #    print(google_err.read())   # You can even read this error object just like a normal response file
+
+    #except not KeyboardInterrupt:
+    except KeyboardInterrupt:
+        import sys
+        sys.exit()
+
+    #except not KeyboardInterrupt:
+    #    ''' <Ctrl-c>押された時以外の例外が起きても処理は続行する '''
+    #    import traceback
+    #    traceback.print_exc()
+    #    import sys
+    #    sys.exit()
 
 
 def main():
