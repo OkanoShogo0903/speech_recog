@@ -36,6 +36,10 @@ from google.cloud.speech import enums
 from google.cloud.speech import types
 import pyaudio
 from six.moves import queue
+
+import server
+
+from datetime import datetime, timedelta
 # [END import_libraries]
 
 # Audio recording parameters
@@ -125,43 +129,57 @@ def listen_print_loop(responses):
     final one, print a newline to preserve the finalized transcription.
     """
     num_chars_printed = 0
-    for response in responses:
-        if not response.results:
-            continue
+    print(datetime.now())
+    print(datetime.now() + timedelta(minutes=1))
+    date_limit = datetime.now() + timedelta(minutes=1)
 
-        # The `results` list is consecutive. For streaming, we only care about
-        # the first result being considered, since once it's `is_final`, it
-        # moves on to considering the next utterance.
-        result = response.results[0]
-        if not result.alternatives:
-            continue
+    try:
+        for response in responses:
+            if not response.results:
+                continue
 
-        # Display the transcription of the top alternative.
-        transcript = result.alternatives[0].transcript
+            # The `results` list is consecutive. For streaming, we only care about
+            # the first result being considered, since once it's `is_final`, it
+            # moves on to considering the next utterance.
+            result = response.results[0]
+            if not result.alternatives:
+                continue
 
-        # Display interim results, but with a carriage return at the end of the
-        # line, so subsequent lines will overwrite them.
-        #
-        # If the previous result was longer than this one, we need to print
-        # some extra spaces to overwrite the previous result
-        overwrite_chars = ' ' * (num_chars_printed - len(transcript))
+            # Display the transcription of the top alternative.
+            transcript = result.alternatives[0].transcript
 
-        if not result.is_final:
-            sys.stdout.write(transcript + overwrite_chars + '\r')
-            sys.stdout.flush()
+            # Display interim results, but with a carriage return at the end of the
+            # line, so subsequent lines will overwrite them.
+            #
+            # If the previous result was longer than this one, we need to print
+            # some extra spaces to overwrite the previous result
+            overwrite_chars = ' ' * (num_chars_printed - len(transcript))
 
-            num_chars_printed = len(transcript)
+            if not result.is_final:
+                sys.stdout.write(transcript + overwrite_chars + '\r')
+                sys.stdout.flush()
 
-        else:
-            print(transcript + overwrite_chars)
+                num_chars_printed = len(transcript)
 
-            # Exit recognition if any of the transcribed phrases could be
-            # one of our keywords.
-            if re.search(r'\b(exit|quit)\b', transcript, re.I):
-                print('Exiting..')
+            else:
+                print(transcript + overwrite_chars)
+
+                # 音声認識した結果をROSに送る
+                server.send_message(transcript)
+
+                # Exit recognition if any of the transcribed phrases could be
+                # one of our keywords.
+                #if re.search(r'\b(exit|quit)\b', transcript, re.I):
+                #    print('Exiting..')
+                #    break
                 break
 
-            num_chars_printed = 0
+                num_chars_printed = 0
+
+    except not KeyboardInterrupt:
+        ''' <Ctrl-c>押された時以外の例外が起きても処理は続行する '''
+        import traceback
+        traceback.print_exc()
 
 
 def main():
@@ -188,6 +206,7 @@ def main():
         # Now, put the transcription responses to use.
         listen_print_loop(responses)
 
-
-if __name__ == '__main__':
+# main
+while 1:
+    print("+++ new +++")
     main()
