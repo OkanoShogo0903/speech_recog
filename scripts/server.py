@@ -1,8 +1,9 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import socket
 
 def main():
-    ip = "192.168.11.2" # show_ipでホスト側のipを調べてここに設定する
+    ip = "172.18.12.65" # show_ipでホスト側のipを調べてここに設定する
     #ip = "localhost"
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((ip, 50007))    # 指定したホスト(IP)とポートをソケットに設定
@@ -11,7 +12,7 @@ def main():
     print("Conneted by"+str(addr))  #サーバ側の合図
 
     while (1):
-        data = raw_input("Client>") # 入力待機
+        data = raw_input("Client>") # 入力待機 
         soc.send(data)              # ソケットに入力したデータを送信
 
         if data == "q":             # qが押されたら終了
