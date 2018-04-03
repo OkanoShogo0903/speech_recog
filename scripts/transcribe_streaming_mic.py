@@ -178,16 +178,15 @@ def listen_print_loop(responses):
     #    print(google_err.read())   # You can even read this error object just like a normal response file
 
     #except not KeyboardInterrupt:
-    except KeyboardInterrupt:
-        import sys
-        sys.exit()
-
-    #except not KeyboardInterrupt:
-    #    ''' <Ctrl-c>押された時以外の例外が起きても処理は続行する '''
-    #    import traceback
-    #    traceback.print_exc()
+    #except KeyboardInterrupt:
+    #    break
     #    import sys
     #    sys.exit()
+
+    except not KeyboardInterrupt:
+        ''' <Ctrl-c>押された時以外の例外が起きても処理は続行する '''
+        import traceback
+        traceback.print_exc()
 
 
 def main():
