@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 # Copyright 2017 Google Inc. All Rights Reserved.
@@ -183,10 +184,13 @@ def listen_print_loop(responses):
     #    import sys
     #    sys.exit()
 
-    except not KeyboardInterrupt:
-        ''' <Ctrl-c>押された時以外の例外が起きても処理は続行する '''
-        import traceback
-        traceback.print_exc()
+    #except not KeyboardInterrupt:
+    #    ''' <Ctrl-c>押された時以外の例外が起きても処理は続行する '''
+    #    import traceback
+    #    traceback.print_exc()
+    #    pass
+    except:
+        pass
 
 
 def main():

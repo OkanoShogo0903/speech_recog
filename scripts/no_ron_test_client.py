@@ -3,7 +3,7 @@
 import socket
 import sys, codecs
 
-ip = "172.18.12.23" # show_ipでサーバー側のipを調べてここに設定する
+ip = "172.18.12.82" # show_ipでサーバー側のipを調べてここに設定する
 port = 50007
 
 def main():

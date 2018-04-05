@@ -7,7 +7,7 @@ import sys, codecs
 
 pub = rospy.Publisher('speechrecognition/voice_recog',String,queue_size=10)
 
-ip = "172.18.12.23" # show_ipでサーバー側のipを調べてここに設定する
+ip = "172.18.12.53" # show_ipでサーバー側のipを調べてここに設定する
 port = 50007
 
 def main():
