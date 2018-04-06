@@ -168,15 +168,8 @@ def listen_print_loop(responses):
             print("result")
             print(transcript + overwrite_chars)
 
+            # TODO ****データを渡している******
             voice_pub.publish(transcript)
-            
-            # TODO ****ここでtranscriptを渡す******
-
-            # Exit recognition if any of the transcribed phrases could be
-            # one of our keywords.
-            #if re.search(r'\b(exit|quit)\b', transcript, re.I):
-            #    print('Exiting..')
-            #    break
 
             num_chars_printed = 0
             
