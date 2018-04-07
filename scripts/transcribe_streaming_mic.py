@@ -125,13 +125,15 @@ class MicrophoneStream(object):
 
 
 class WordClass(object):
+    thread_num = 0
     def __init__(self):
         self.stop_event = threading.Event() #停止させるかのフラグ
         self.threshold = timedelta(seconds=2)
         self.word_stack = []
         self.word_add("",False)
 
-        self.thread = threading.Thread(target = self.word_manager)
+        WordClass.thread_num += 1
+        self.thread = threading.Thread(target = self.word_manager, name="Word " + str(WordClass.thread_num))
         self.thread.start()
     
 
@@ -156,25 +158,33 @@ class WordClass(object):
         APIから5秒間データを渡されなかった時、雑音を受け取っていると判断して、処理途中のデータを投げる
         '''
         while not self.stop_event.is_set():
-            time.sleep(0.5)
-            interval = datetime.now() - self.word_stack[-1]["time_stamp"]
-            print(interval)
-            if self.word_stack[-1]["is_published"] == False:
-                if interval > self.threshold:
-                    if self.word_stack[-1]["word"] != "": # 初期はエラー避けにword=""を入れてるのでそれは外す
-                        # 一旦区切って、途中経過の文字列を処理後の文字列として送信する
-                        print("--------------------")
-                        self.word_stack[-1]["is_published"] = True
-                        self.word_stack[-1]["is_final"] = True
-                        print("publish : ",self.word_stack[-1])
-                        #voice_pub.publish(self.word_stack[-1])
-                        return
+            try:
+                time.sleep(0.5)
+                interval = datetime.now() - self.word_stack[-1]["time_stamp"]
+                print(interval)
+                if self.word_stack[-1]["is_published"] == False:
+                    if interval > self.threshold:
+                        if self.word_stack[-1]["word"] != "": # 初期はエラー避けにword=""を入れてるのでそれは外す
+                            # 一旦区切って、途中経過の文字列を処理後の文字列として送信する
+                            print("--------------------")
+                            self.word_stack[-1]["is_published"] = True
+                            self.word_stack[-1]["is_final"] = True
+                            print("publish : ",self.word_stack[-1])
+                            if IS_ROS_ACTIVE:
+                                voice_pub.publish(self.word_stack[-1])
+                            create_speech_recog_thread()
+                            return # 途中結果を最終結果として送ったら切れる
 
-                elif self.word_stack[-1]["is_final"] == True: # 最終結果をそのまま渡す
-                    print("++++++++++++++++++++")
-                    self.word_stack[-1]["is_published"] = True
-                    print("publish : ",self.word_stack[-1])
-                    #voice_pub.publish(self.word_stack[-1])
+                    elif self.word_stack[-1]["is_final"] == True: # 最終結果をそのまま渡す
+                        print("++++++++++++++++++++")
+                        self.word_stack[-1]["is_published"] = True
+                        print("publish : ",self.word_stack[-1])
+                        if IS_ROS_ACTIVE:
+                            voice_pub.publish(self.word_stack[-1])
+                        create_speech_recog_thread()
+            except KeyboardInterrupt:
+                return
+# [END word manage]
 
 
 def listen_print_loop(responses):
@@ -211,14 +221,13 @@ def listen_print_loop(responses):
                     transcript = result.alternatives[0].transcript
 
                     if not result.is_final:
-                        print("processing")
+                        print("processing ", threading.currentThread().getName())
                         print(transcript)
                         word.word_add(transcript, False)
                     else:
-                        print("result")
+                        print("result ", threading.currentThread().getName())
                         print(transcript)
                         word.word_add(transcript, True)
-                        #create_speech_recog_thread()
                         return
 
                     if speech_loop == 'stop':
@@ -230,12 +239,25 @@ def listen_print_loop(responses):
                         return
 
                     # 1秒に一回だけforの頭にいくようにして、
+            except KeyboardInterrupt:
+                return
             except:
                 print(" --------- err -----------")
-                #import traceback
-                #traceback.print_exc()
-                return
-                        
+                import traceback
+                traceback.print_exc()
+                # 処理を続ける
+
+create_num = 0
+def create_speech_recog_thread():
+    print("<<<<< main start >>>>>")
+    global create_num
+    create_num += 1
+    thread = threading.Thread(target = main, name="Main " + str(create_num))
+    #main_thread.setDaemon(True)
+    thread.start()
+#    if thread.isAlive():
+#        thread.join()
+
 
 #def main(request):
 def main():
@@ -268,20 +290,29 @@ def main():
         listen_print_loop(responses)
 
 
+#is_kill = False
+#class SpeechRecog(object):
+#    def __init__(self):
+#        self.thread = threading.Thread(target = self.please)
+#        self.thread.start()
+#    
+#
+#    def __enter__(self):
+#        # withステートメントで処理するための記述
+#        return self
+#        
+#
+#    def __exit__(self, type, value, traceback):
+#        #スレッドが停止するのを待つ
+#        self.stop_event.set()
+#        self.thread.join()
+
+
 def CB(request):
     global speech_loop
     speech_loop = request.data
 
     
-def create_speech_recog_thread():
-    print("<<<<< main start >>>>>")
-    thread = threading.Thread(target = main)
-    #main_thread.setDaemon(True)
-    thread.start()
-#    if thread.isAlive():
-#        thread.join()
-
-
 if IS_ROS_ACTIVE:
     google_start_sub = rospy.Subscriber('google_req/start',String,main)
     google_stop_sub = rospy.Subscriber('google_req/stop',String,CB)
@@ -292,9 +323,23 @@ if __name__ == '__main__':
         rospy.init_node('speech_recog')
         rospy.spin()
     else:
-#    while 1:
-#        main()
         create_speech_recog_thread()
 
+        main_thread = threading.currentThread()
+        while True:
+            time.sleep(1)
+
+            tlist = threading.enumerate()
+            #if len(tlist) &lt; 2: break
+            for t in tlist:
+                if t is main_thread: continue
+                print (t)
+            
+        #time.sleep(5)
+        #print("5秒たったで〜〜〜")
+        #time.sleep(5)
+        
+#        with SpeechRecog() as s:
+#            main()
 
 # TODO スレッド数の監視??
