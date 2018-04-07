@@ -28,12 +28,16 @@ Example usage:
 """
 
 # [START import_libraries]
+
 from __future__ import division
+
+IS_ROS_ACTIVE = False
 
 import re
 import sys
-#import rospy
-#from std_msgs.msg import String
+if IS_ROS_ACTIVE:
+    import rospy
+    from std_msgs.msg import String
 
 from google.cloud import speech
 from google.cloud.speech import enums
@@ -164,6 +168,7 @@ class WordClass(object):
                         self.word_stack[-1]["is_final"] = True
                         print("publish : ",self.word_stack[-1])
                         #voice_pub.publish(self.word_stack[-1])
+                        return
 
                 elif self.word_stack[-1]["is_final"] == True: # 最終結果をそのまま渡す
                     print("++++++++++++++++++++")
@@ -190,44 +195,47 @@ def listen_print_loop(responses):
 
     global speech_loop
     with WordClass() as word:
-        try:
-            print("*** listen_print_loop ***")
-            for response in responses:
-                print("**********************")
-                # 渡されたデータが空だった時の処理
-                if not response.results:
-                    continue
-                result = response.results[0]
-                if not result.alternatives:
-                    continue
+        while 1:
+            try:
+                print("*** listen_print_loop ***")
+                for response in responses: # ここでストリームで音声を送信して、GoogleAPIからの結果が来るまで待機する
+                    print("**********************")
+                    # 渡されたデータが空だった時の処理
+                    if not response.results:
+                        continue
+                    result = response.results[0]
+                    if not result.alternatives:
+                        continue
 
-                # Display the transcription of the top alternative.
-                transcript = result.alternatives[0].transcript
+                    # Display the transcription of the top alternative.
+                    transcript = result.alternatives[0].transcript
 
-                if not result.is_final:
-                    print("processing")
-                    print(transcript)
-                    word.word_add(transcript, False)
-                else:
-                    print("result")
-                    print(transcript)
-                    word.word_add(transcript, True)
-                    #create_speech_recog_thread()
-                    return
+                    if not result.is_final:
+                        print("processing")
+                        print(transcript)
+                        word.word_add(transcript, False)
+                    else:
+                        print("result")
+                        print(transcript)
+                        word.word_add(transcript, True)
+                        #create_speech_recog_thread()
+                        return
 
-                if speech_loop == 'stop':
-                    print("****break*****")
-                    speech_loop = 'Null'
-                    return
+                    if speech_loop == 'stop':
+                        print("***** break *****")
+                        speech_loop = 'Null'
+                        return
 
-                if word.word_stack[-1]["is_final"] == True:
-                    return
-        except:
-            print(" --------- err -----------")
-            #import traceback
-            #traceback.print_exc()
-            return
-                    
+                    if word.word_stack[-1]["is_final"] == True:
+                        return
+
+                    # 1秒に一回だけforの頭にいくようにして、
+            except:
+                print(" --------- err -----------")
+                #import traceback
+                #traceback.print_exc()
+                return
+                        
 
 #def main(request):
 def main():
@@ -265,9 +273,6 @@ def CB(request):
     speech_loop = request.data
 
     
-#google_start_sub = rospy.Subscriber('google_req/start',String,main)
-#google_stop_sub = rospy.Subscriber('google_req/stop',String,CB)
-
 def create_speech_recog_thread():
     print("<<<<< main start >>>>>")
     thread = threading.Thread(target = main)
@@ -276,12 +281,20 @@ def create_speech_recog_thread():
 #    if thread.isAlive():
 #        thread.join()
 
+
+if IS_ROS_ACTIVE:
+    google_start_sub = rospy.Subscriber('google_req/start',String,main)
+    google_stop_sub = rospy.Subscriber('google_req/stop',String,CB)
+
+
 if __name__ == '__main__':
-#    rospy.init_node('speech_recog')
-#    rospy.spin()
-#    create_speech_recog_thread()
+    if IS_ROS_ACTIVE:
+        rospy.init_node('speech_recog')
+        rospy.spin()
+    else:
 #    while 1:
-    main()
+#        main()
+        create_speech_recog_thread()
+
 
 # TODO スレッド数の監視??
-# TODO googleの音声認識に通し番号ある？ → No
