@@ -15,9 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Google Cloud Speech API sample application using the streaming API.
+"""
+Google Cloud Speech APIのsampleをベースにして書かれています
+APIにストリームで音声を渡しています
 
-NOTE: This module requires the additional dependency `pyaudio`. To install
 using pip:
 
     pip install pyaudio
@@ -31,14 +32,17 @@ from __future__ import division
 
 import re
 import sys
-import rospy
-from std_msgs.msg import String
+#import rospy
+#from std_msgs.msg import String
 
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 import pyaudio
 from six.moves import queue
+import threading
+from datetime import datetime,timedelta
+import time
 # [END import_libraries]
 
 # Audio recording parameters
@@ -47,7 +51,7 @@ CHUNK = int(RATE / 10)  # 100ms
 
 speech_loop = 'Null'
 
-voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
+#voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
 
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
@@ -116,6 +120,58 @@ class MicrophoneStream(object):
 # [END audio_stream]
 
 
+class WordClass(object):
+    def __init__(self):
+        self.stop_event = threading.Event() #停止させるかのフラグ
+        self.threshold = timedelta(seconds=2)
+        self.word_stack = []
+        self.word_add("",False)
+
+        self.thread = threading.Thread(target = self.word_manager)
+        self.thread.start()
+    
+
+    def __enter__(self):
+        # withステートメントで処理するための記述
+        return self
+        
+
+    def __exit__(self, type, value, traceback):
+        #スレッドが停止するのを待つ
+        self.stop_event.set()
+        self.thread.join()
+
+
+    def word_add(self,_word, _flag):
+        self.word_stack.append({"word":_word, "is_final":_flag, "time_stamp":datetime.now(), "is_published":False})
+        #print(word_stack[-1])
+
+
+    def word_manager(self):
+        '''
+        APIから5秒間データを渡されなかった時、雑音を受け取っていると判断して、処理途中のデータを投げる
+        '''
+        while not self.stop_event.is_set():
+            time.sleep(0.5)
+            interval = datetime.now() - self.word_stack[-1]["time_stamp"]
+            print(interval)
+            if self.word_stack[-1]["is_published"] == False:
+                if interval > self.threshold:
+                    if self.word_stack[-1]["word"] != "": # 初期はエラー避けにword=""を入れてるのでそれは外す
+                        # 一旦区切って、途中経過の文字列を処理後の文字列として送信する
+                        print("--------------------")
+                        self.word_stack[-1]["is_published"] = True
+                        self.word_stack[-1]["is_final"] = True
+                        print("publish : ",self.word_stack[-1])
+                        #voice_pub.publish(self.word_stack[-1])
+
+                elif self.word_stack[-1]["is_final"] == True: # 最終結果をそのまま渡す
+                    print("++++++++++++++++++++")
+                    self.word_stack[-1]["is_published"] = True
+                    print("publish : ",self.word_stack[-1])
+                    #voice_pub.publish(self.word_stack[-1])
+
+
 def listen_print_loop(responses):
     """Iterates through server responses and prints them.
 
@@ -133,52 +189,48 @@ def listen_print_loop(responses):
     """
 
     global speech_loop
-    num_chars_printed = 0
-    print("*** listen_print_loop ***")
-    for response in responses:
-        print("**********************")
-        if not response.results:
-            continue
+    with WordClass() as word:
+        try:
+            print("*** listen_print_loop ***")
+            for response in responses:
+                print("**********************")
+                # 渡されたデータが空だった時の処理
+                if not response.results:
+                    continue
+                result = response.results[0]
+                if not result.alternatives:
+                    continue
 
-        # The `results` list is consecutive. For streaming, we only care about
-        # the first result being considered, since once it's `is_final`, it
-        # moves on to considering the next utterance.
-        result = response.results[0]
-        if not result.alternatives:
-            continue
+                # Display the transcription of the top alternative.
+                transcript = result.alternatives[0].transcript
 
-        # Display the transcription of the top alternative.
-        transcript = result.alternatives[0].transcript
+                if not result.is_final:
+                    print("processing")
+                    print(transcript)
+                    word.word_add(transcript, False)
+                else:
+                    print("result")
+                    print(transcript)
+                    word.word_add(transcript, True)
+                    #create_speech_recog_thread()
+                    return
 
-        # Display interim results, but with a carriage return at the end of the
-        # line, so subsequent lines will overwrite them.
-        #
-        # If the previous result was longer than this one, we need to print
-        # some extra spaces to overwrite the previous result
-        overwrite_chars = ' ' * (num_chars_printed - len(transcript))
+                if speech_loop == 'stop':
+                    print("****break*****")
+                    speech_loop = 'Null'
+                    return
 
-        if not result.is_final:
-            print("processing")
-            sys.stdout.write(transcript + overwrite_chars + '\r')
-            sys.stdout.flush()
+                if word.word_stack[-1]["is_final"] == True:
+                    return
+        except:
+            print(" --------- err -----------")
+            #import traceback
+            #traceback.print_exc()
+            return
+                    
 
-            num_chars_printed = len(transcript)
-
-        else:
-            print("result")
-            print(transcript + overwrite_chars)
-
-            # TODO ****データを渡している******
-            voice_pub.publish(transcript)
-
-            num_chars_printed = 0
-            
-        if speech_loop == 'stop':
-            print("****break*****")
-            speech_loop = 'Null'
-            break
-            
-def main(request):
+#def main(request):
+def main():
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
     language_code = 'ja-JP'  # a BCP-47 language tag
@@ -206,16 +258,30 @@ def main(request):
 
         # Now, put the transcription responses to use.
         listen_print_loop(responses)
-        
+
+
 def CB(request):
     global speech_loop
     speech_loop = request.data
+
     
-google_start_sub = rospy.Subscriber('google_req/start',String,main)
-google_stop_sub = rospy.Subscriber('google_req/stop',String,CB)
+#google_start_sub = rospy.Subscriber('google_req/start',String,main)
+#google_stop_sub = rospy.Subscriber('google_req/stop',String,CB)
+
+def create_speech_recog_thread():
+    print("<<<<< main start >>>>>")
+    thread = threading.Thread(target = main)
+    #main_thread.setDaemon(True)
+    thread.start()
+#    if thread.isAlive():
+#        thread.join()
 
 if __name__ == '__main__':
-    rospy.init_node('speech_recog')
-    rospy.spin()
+#    rospy.init_node('speech_recog')
+#    rospy.spin()
+#    create_speech_recog_thread()
+#    while 1:
+    main()
 
-                        
+# TODO スレッド数の監視??
+# TODO googleの音声認識に通し番号ある？ → No
