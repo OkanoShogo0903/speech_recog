@@ -342,4 +342,3 @@ if __name__ == '__main__':
 #        with SpeechRecog() as s:
 #            main()
 
-# TODO スレッド数の監視??
