@@ -5,9 +5,9 @@ import rospy
 from std_msgs.msg import String
 import sys, codecs
 
-pub = rospy.Publisher('speechrecognition/voice_recog',String,queue_size=10)
+pub = rospy.Publisher('voice_recog',Dictation,queue_size=10)
 
-ip = "172.18.12.95" # show_ipでサーバー側のipを調べてここに設定する
+ip = "172.20.10.2" # show_ipでサーバー側のipを調べてここに設定する
 port = 50007
 
 def main():
