@@ -47,6 +47,7 @@ from six.moves import queue
 import threading
 from datetime import datetime,timedelta
 import time
+import types as value_type
 # [END import_libraries]
 
 # Audio recording parameters
@@ -125,15 +126,21 @@ class MicrophoneStream(object):
 
 
 class WordClass(object):
-    thread_num = 0
+    ''' ROSに音声認識の結果を投げるWORDスレッドを管理するクラス '''
+    thread_num = 0 # スレッドの名前を通し番号で管理するためのクラス共通の値
     def __init__(self):
+
+        # [よく変えるパラーメータ]
+        self.loop_interval = 0.5
+        self.threshold = timedelta(seconds=1)
+        # [よく変えるパラーメータ END]
+
         self.stop_event = threading.Event() #停止させるかのフラグ
-        self.threshold = timedelta(seconds=2)
         self.word_stack = []
-        self.word_add("",False)
+        self.word_add("",False) # なにも要素を持たないword_add[-1]を参照するとエラーになるのをカバー(不格好)
 
         WordClass.thread_num += 1
-        self.thread = threading.Thread(target = self.word_manager, name="Word " + str(WordClass.thread_num))
+        self.thread = threading.Thread(target = self.word_manager, name="[Word " + str(WordClass.thread_num) + "]")
         self.thread.start()
     
 
@@ -152,36 +159,54 @@ class WordClass(object):
         self.word_stack.append({"word":_word, "is_final":_flag, "time_stamp":datetime.now(), "is_published":False})
         #print(word_stack[-1])
 
+    
+    def publish(self,_dict):
+        ''' jsonにパースできないのはここで消す(仕様) '''
+        delete_list = []
+        for key in _dict:
+            key_type = (type)(_dict[key])
+            if key_type != str and key_type != bool:
+                delete_list.append(key)
+        # 削除
+        for i in delete_list:
+            _dict.pop(i)
+
+        print(self.thread_name,key)
+        print(self.thread_name," publish : ",_dict,self.thread_name)
+        if IS_ROS_ACTIVE:
+            voice_pub.publish(_dict) # ここで投げる
+
 
     def word_manager(self):
         '''
         APIから5秒間データを渡されなかった時、雑音を受け取っていると判断して、処理途中のデータを投げる
         '''
+        self.thread_name = threading.currentThread().getName()
+
         while not self.stop_event.is_set():
             try:
-                time.sleep(0.5)
+                time.sleep(self.loop_interval)
                 interval = datetime.now() - self.word_stack[-1]["time_stamp"]
-                print(interval)
+                print(self.thread_name,interval)
                 if self.word_stack[-1]["is_published"] == False:
-                    if interval > self.threshold:
+                    # [FINAL]の処理
+                    if self.word_stack[-1]["is_final"] == True: # 最終結果をそのまま渡す
+                        print(self.thread_name,"++++++++++++++++++++")
+                        self.word_stack[-1]["is_published"] = True
+                        self.publish(self.word_stack[-1])
+                        create_speech_recog_thread()
+                        return
+                    # [INTERRUPT]の処理
+                    elif interval > self.threshold:
                         if self.word_stack[-1]["word"] != "": # 初期はエラー避けにword=""を入れてるのでそれは外す
                             # 一旦区切って、途中経過の文字列を処理後の文字列として送信する
-                            print("--------------------")
+                            print(self.thread_name,"--------------------")
                             self.word_stack[-1]["is_published"] = True
                             self.word_stack[-1]["is_final"] = True
-                            print("publish : ",self.word_stack[-1])
-                            if IS_ROS_ACTIVE:
-                                voice_pub.publish(self.word_stack[-1])
+                            self.publish(self.word_stack[-1])
                             create_speech_recog_thread()
                             return # 途中結果を最終結果として送ったら切れる
 
-                    elif self.word_stack[-1]["is_final"] == True: # 最終結果をそのまま渡す
-                        print("++++++++++++++++++++")
-                        self.word_stack[-1]["is_published"] = True
-                        print("publish : ",self.word_stack[-1])
-                        if IS_ROS_ACTIVE:
-                            voice_pub.publish(self.word_stack[-1])
-                        create_speech_recog_thread()
             except KeyboardInterrupt:
                 return
 # [END word manage]
@@ -204,12 +229,18 @@ def listen_print_loop(responses):
     """
 
     global speech_loop
+    thread_name = threading.currentThread().getName()
+
     with WordClass() as word:
         while 1:
             try:
-                print("*** listen_print_loop ***")
+                #print(thread_name,"*** listen_print_loop ***")
                 for response in responses: # ここでストリームで音声を送信して、GoogleAPIからの結果が来るまで待機する
-                    print("**********************")
+                    if word.word_stack[-1]["is_final"] == True: # [INTERRUPT]時はMainスレッドをここで殺す
+                        print(thread_name,"Die")
+                        return
+
+                    #print(thread_name,"**********************")
                     # 渡されたデータが空だった時の処理
                     if not response.results:
                         continue
@@ -221,38 +252,65 @@ def listen_print_loop(responses):
                     transcript = result.alternatives[0].transcript
 
                     if not result.is_final:
-                        print("processing ", threading.currentThread().getName())
-                        print(transcript)
+                        #print(thread_name," processing")
+                        #print(thread_name,transcript)
                         word.word_add(transcript, False)
                     else:
-                        print("result ", threading.currentThread().getName())
-                        print(transcript)
-                        word.word_add(transcript, True)
+                        #print(thread_name," result ")
+                        #print(thread_name,transcript)
+                        word.word_add(transcript, True) # [FINAL]
                         return
 
                     if speech_loop == 'stop':
-                        print("***** break *****")
+                        print(thread_name,"***** break *****")
                         speech_loop = 'Null'
                         return
 
-                    if word.word_stack[-1]["is_final"] == True:
-                        return
 
                     # 1秒に一回だけforの頭にいくようにして、
             except KeyboardInterrupt:
                 return
             except:
-                print(" --------- err -----------")
+                print(thread_name," --------- err -----------",len(threading.enumerate()))
                 import traceback
                 traceback.print_exc()
-                # 処理を続ける
+                if check_thread_name():
+                    create_speech_recog_thread()
+                return
+
+
+def check_thread_name():
+    ''' スレッド名の数字だけ取り出して、自分のスレッド名の番号が一番若かったときだけtrueを返す '''
+    import re
+    #pattern=r'([+-]?[0-9]+\.?[0-9]*)'
+    pattern=r'([0-9]+\.?[0-9]*)'
+
+    print("@",threading.currentThread())
+    print("@",threading.currentThread().getName())
+    number_list = []
+    for t in threading.enumerate(): # 自分のスレッド以外かつcleanupスレッド以外の名前に含まれる番号を調べる
+        print("@@@",t.getName())
+        if t.getName() in 'Main':
+            if not t.getName() is threading.currentThread().getName():
+                print("@@@@@",t.getName())
+                number_list.extend( re.findall(pattern,t.getName()))
+
+    # 自分スレッドの番と、他のスレッドの番号を比較する
+    my_num = re.findall(pattern,threading.currentThread().getName())
+    print("@@@@@@@@@@@",number_list)
+    print("@@@@@@@@@@@",my_num)
+    for other_num in number_list:
+        if other_num > my_num:
+            return False # 自分のスレッドの番号よりも大きな番号があった時
+    return True # 自分のスレッドの番号が一番大きかった時
 
 create_num = 0
 def create_speech_recog_thread():
-    print("<<<<< main start >>>>>")
     global create_num
     create_num += 1
-    thread = threading.Thread(target = main, name="Main " + str(create_num))
+    name = "[Main " + str(create_num) + "]"
+    print(name,"<<<<< main start >>>>>")
+    thread = threading.Thread(target = main, name=name)
     #main_thread.setDaemon(True)
     thread.start()
 #    if thread.isAlive():
@@ -325,20 +383,14 @@ if __name__ == '__main__':
     else:
         create_speech_recog_thread()
 
-        main_thread = threading.currentThread()
+        main_thread_name = threading.currentThread()
         while True:
             time.sleep(1)
 
             tlist = threading.enumerate()
             #if len(tlist) &lt; 2: break
             for t in tlist:
-                if t is main_thread: continue
+                if t is main_thread_name: continue
                 print (t)
-            
-        #time.sleep(5)
-        #print("5秒たったで〜〜〜")
-        #time.sleep(5)
-        
-#        with SpeechRecog() as s:
-#            main()
+
 
