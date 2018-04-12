@@ -48,6 +48,7 @@ import threading
 from datetime import datetime,timedelta
 import time
 import types as value_type
+import json
 # [END import_libraries]
 
 # Audio recording parameters
@@ -165,16 +166,27 @@ class WordClass(object):
         delete_list = []
         for key in _dict:
             key_type = (type)(_dict[key])
-            if key_type != str and key_type != bool:
-                delete_list.append(key)
+            if key_type != str:
+                if key_type != bool:
+                    if key_type != int:
+                        delete_list.append(key)
         # 削除
         for i in delete_list:
             _dict.pop(i)
 
-        print(self.thread_name,key)
-        print(self.thread_name," publish : ",_dict,self.thread_name)
+        ''' 辞書から文字列に '''
+        # datetime型を含む辞書ではjsonがdatetime型を知らないためにエラーを吐く
+        string = json.dumps(_dict) 
+        print(self.thread_name," publish : ",type(string),string, self.thread_name)
+
+        # --- test
+        # import json
+        print(type(json.loads(string)))
+        print(json.loads(string))
+        # --- end
+
         if IS_ROS_ACTIVE:
-            voice_pub.publish(_dict) # ここで投げる
+            voice_pub.publish(string) # ここで投げる
 
 
     def word_manager(self):
