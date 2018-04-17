@@ -31,7 +31,7 @@ Example usage:
 
 from __future__ import division
 
-IS_ROS_ACTIVE = True
+IS_ROS_ACTIVE = False
 
 import re
 import sys
@@ -387,8 +387,8 @@ def start_function(request):
         tlist = threading.enumerate()
         #if len(tlist) &lt; 2: break
         for t in tlist:
-    	    if t is main_thread_name: continue
-    	    print (t)
+            if t is main_thread_name: continue
+            print (t)
 
 
 if IS_ROS_ACTIVE:
@@ -401,4 +401,4 @@ if __name__ == '__main__':
         rospy.init_node('speech_recog')
         rospy.spin() # イベントがあるまでプログラム停止
     else:
-        start_function()
+        start_function("hoge")

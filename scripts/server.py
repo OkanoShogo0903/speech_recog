@@ -4,7 +4,7 @@ import socket
 import types
 
 #ip = "localhost"
-ip = "172.18.12.95" # show_ipでホスト側のipを調べてここに設定する
+ip = "172.18.4.99" # show_ipでホスト側のipを調べてここに設定する
 port = 50007
 
 def send_message(_message):
