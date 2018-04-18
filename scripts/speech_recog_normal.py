@@ -31,7 +31,7 @@ Example usage:
 
 from __future__ import division
 
-IS_ROS_ACTIVE = False
+IS_ROS_ACTIVE = True
 
 import re
 import sys
@@ -57,7 +57,8 @@ CHUNK = int(RATE / 10)  # 100ms
 
 speech_loop = 'Null'
 
-#voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
+if IS_ROS_ACTIVE == True:
+    voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
 
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
@@ -166,7 +167,8 @@ class WordClass(object):
         delete_list = []
         for key in _dict:
             key_type = (type)(_dict[key])
-            if key_type != str:
+            print(key_type)
+            if key_type != unicode:
                 if key_type != bool:
                     if key_type != int:
                         delete_list.append(key)
@@ -176,7 +178,7 @@ class WordClass(object):
 
         ''' 辞書から文字列に '''
         # datetime型を含む辞書ではjsonがdatetime型を知らないためにエラーを吐く
-        string = json.dumps(_dict) 
+        string = json.dumps(_dict)
         print(self.thread_name," publish : ",type(string),string, self.thread_name)
 
         if IS_ROS_ACTIVE:
@@ -399,6 +401,7 @@ if IS_ROS_ACTIVE:
 if __name__ == '__main__':
     if IS_ROS_ACTIVE:
         rospy.init_node('speech_recog')
-        rospy.spin() # イベントがあるまでプログラム停止
+        start_function("hoge")
+        #rospy.spin() # イベントがあるまでプログラム停止
     else:
         start_function("hoge")

@@ -41,6 +41,13 @@ PCを二台用意することを想定しています
 5. クライアント側の起動  
 `client.py`をROSRUNする
 
+## Using
+~~~
+$ roscore
+$ rosrun go_get_it_imp VoiceRecognizer.py
+$ rosrun go_get_it_imp GoGetItNode.py
+$ python speech_recog_normal.py
+~~~
 
 ## Error
 - ネットワークエラー集
