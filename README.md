@@ -53,12 +53,37 @@ $ python speech_recog_normal.py
 - ネットワークエラー集
   - `OSError: [Errno 99] Cannot assign requested address`  
       ネット繋がってないよ〜 :sob:  
-
 - ネットワーク以外のエラー
   - DefaultCredentialsError
     GOOGLE_APPLICATION_CREDENTIALSを設定する
     `export GOOGLE_APPLICATION_CREDENTIALS=/鍵のPATH`
+  - AuthMetadataPluginCallback
+~~~
+ERROR:root:AuthMetadataPluginCallback "<google.auth.transport.grpc.AuthMetadataPlugin object at 0x7f41cbc646a0>" raised exception!
+Traceback (most recent call last):
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/urllib3/contrib/pyopenssl.py", line 441, in wrap_socket
+    cnx.do_handshake()
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/OpenSSL/SSL.py", line 1716, in do_handshake
+    self._raise_ssl_error(self._ssl, result)
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/OpenSSL/SSL.py", line 1449, in _raise_ssl_error
+    raise SysCallError(-1, "Unexpected EOF")
+OpenSSL.SSL.SysCallError: (-1, 'Unexpected EOF')
 
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/urllib3/connectionpool.py", line 595, in urlopen
+    self._prepare_proxy(conn)
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/urllib3/connectionpool.py", line 816, in _prepare_proxy
+    conn.connect()
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/urllib3/connection.py", line 326, in connect
+    ssl_context=context)
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/urllib3/util/ssl_.py", line 329, in ssl_wrap_socket
+    return context.wrap_socket(sock, server_hostname=server_hostname)
+  File "/home/okano/anaconda3/lib/python3.6/site-packages/urllib3/contrib/pyopenssl.py", line 448, in wrap_socket
+    raise ssl.SSLError('bad handshake: %r' % e)
+ssl.SSLError: ("bad handshake: SysCallError(-1, 'Unexpected EOF')",)
+~~~
 ## HotRef
 ~~~
 $ lsusb

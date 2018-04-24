@@ -31,7 +31,7 @@ Example usage:
 
 from __future__ import division
 
-IS_ROS_ACTIVE = True
+IS_ROS_ACTIVE = False # !!! ROSの切り替え !!!
 
 import re
 import sys
@@ -47,8 +47,9 @@ from six.moves import queue
 import threading
 from datetime import datetime,timedelta
 import time
-import types as value_type
+import types as value_type # typesはgoogle.cloud.speesh import types で使われてるからas使っとく
 import json
+import six
 # [END import_libraries]
 
 # Audio recording parameters
@@ -59,6 +60,39 @@ speech_loop = 'Null'
 
 if IS_ROS_ACTIVE == True:
     voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
+
+# GoogleSpeechAPI Hint
+place_hint = [\
+        "dining",\
+        "children",\
+        "hallway",\
+        "bartable",\
+        "balcony",\
+        "bedroom",\
+        "entrance",\
+        "kitchen",\
+        "living",\
+        ]
+object_hint = [\
+        "apple",\
+        "banana",\
+        "bikkle",\
+        "cupnoodle",\
+        "potelong",\
+        "chipstar",\
+        ]
+command_hint = [\
+        "Follow",\
+        "release",\
+        "right",\
+        "left",\
+        "yes",\
+        "no",\
+        "finish",\
+        "cancel",\
+        "thank you",\
+        ]
+
 
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
@@ -71,6 +105,7 @@ class MicrophoneStream(object):
         self._buff = queue.Queue()
         self.closed = True
        
+
     def __enter__(self):
         self._audio_interface = pyaudio.PyAudio()
         self._audio_stream = self._audio_interface.open(
@@ -84,10 +119,9 @@ class MicrophoneStream(object):
             # overflow while the calling thread makes network requests, etc.
             stream_callback=self._fill_buffer,
         )
-
         self.closed = False
-
         return self
+
 
     def __exit__(self, type, value, traceback):
         self._audio_stream.stop_stream()
@@ -98,10 +132,12 @@ class MicrophoneStream(object):
         self._buff.put(None)
         self._audio_interface.terminate()
 
+
     def _fill_buffer(self, in_data, frame_count, time_info, status_flags):
         """Continuously collect data from the audio stream, into the buffer."""
         self._buff.put(in_data)
         return None, pyaudio.paContinue
+
 
     def generator(self):
         while not self.closed:
@@ -163,15 +199,24 @@ class WordClass(object):
 
     
     def publish(self,_dict):
-        ''' jsonにパースできないのはここで消す(仕様) '''
+        '''
+        jsonにパースできないのはここで消す(仕様)
+        例えばdatatime型とかね
+        '''
         delete_list = []
+        print("six2 : ",six.PY2)
+        print("six3 : ",six.PY3)
         for key in _dict:
             key_type = (type)(_dict[key])
             print(key_type)
-            if key_type != unicode:
-                if key_type != bool:
-                    if key_type != int:
-                        delete_list.append(key)
+            if key_type != bool:
+                if key_type != int:
+                    if key_type != str:
+                        if six.PY2 == True: # Python2系の場合はunicodeかどうかも見ておく
+                            if key_type != unicode:
+                                delete_list.append(key)
+                        else: # Python3系の場合
+                            delete_list.append(key)
         # 削除
         for i in delete_list:
             _dict.pop(i)
@@ -312,6 +357,7 @@ def check_thread_name():
             return False # 自分のスレッドの番号よりも大きな番号があった時
     return True # 自分のスレッドの番号が一番大きかった時
 
+
 create_num = 0
 def create_speech_recog_thread():
     global create_num
@@ -325,14 +371,13 @@ def create_speech_recog_thread():
 #        thread.join()
 
 
-#def main(request):
 def main():
     # See http://g.co/cloud/speech/docs/languages
-    # for a list of supported languages.
+    # fo#r a list of supported languages.
     language_code = 'ja-JP'  # a BCP-47 language tag
     client = speech.SpeechClient()
     speech_contexts = [speech.types.SpeechContext(
-        phrases=["kitchen", "living", "entrance", "bedroom", "dining", "bikkle", "cupnoodle", "finish", "Follow"]
+        phrases=place_hint + command_hint + object_hint
     )]
 
     config = types.RecognitionConfig(
