@@ -31,7 +31,7 @@ Example usage:
 
 from __future__ import division
 
-IS_ROS_ACTIVE = False # !!! ROSの切り替え !!!
+IS_ROS_ACTIVE = True # !!! ROSの切り替え !!!
 
 import re
 import sys
