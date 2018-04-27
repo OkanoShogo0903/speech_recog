@@ -169,8 +169,8 @@ class WordClass(object):
     def __init__(self):
 
         # [よく変えるパラーメータ]
-        self.loop_interval = 0.5
-        self.threshold = timedelta(seconds=1)
+        self.loop_interval = 0.5 # sec
+        self.threshold = timedelta(seconds=1.5)
         # [よく変えるパラーメータ END]
 
         self.stop_event = threading.Event() #停止させるかのフラグ
