@@ -73,14 +73,7 @@ place_hint = [\
         "kitchen",\
         "living",\
         ]
-object_hint = [\
-        "apple",\
-        "banana",\
-        "bikkle",\
-        "cupnoodle",\
-        "potelong",\
-        "chipstar",\
-        ]
+object_hint = []
 command_hint = [\
         "Follow",\
         "release",\

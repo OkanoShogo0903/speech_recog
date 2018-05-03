@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 import socket
-import rospy
-from std_msgs.msg import String
+#import rospy
+#from std_msgs.msg import String
 import sys, codecs
 
-pub = rospy.Publisher('voice_recog',String,queue_size=10)
+#pub = rospy.Publisher('voice_recog',String,queue_size=10)
 
-ip = "172.20.4.99" # show_ipでサーバー側のipを調べてここに設定する
+ip = "172.16.40.225" # show_ipでサーバー側のipを調べてここに設定する
 port = 50007
 
 def main():
@@ -20,13 +20,13 @@ def main():
         data = soc.recv(4096).decode('utf-8')       # データを受信（4096バイトまで）
         _dict = {"word":data}
         if _dict["word"] != "":
-            print "Client > ",_dict["word"]        # サーバー側の書き込みを表示
-            pub.publish(_dict)
+            print ("Client > ",_dict["word"])        # サーバー側の書き込みを表示
+            #pub.publish(_dict)
         else:
-            print "音声認識のサーバー側が終了したためクライアント側も終了します。"
+            print ("音声認識のサーバー側が終了したためクライアント側も終了します。")
             soc.close()
             break
 
 if __name__ == '__main__':
-    rospy.init_node('speech_recog_client')
+    #rospy.init_node('speech_recog_client')
     main()
