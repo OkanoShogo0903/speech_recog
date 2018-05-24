@@ -220,7 +220,7 @@ class WordClass(object):
         print(self.thread_name," publish : ",type(string),string, self.thread_name)
 
         if IS_ROS_ACTIVE:
-            voice_pub.publish(word_stack[-1])
+            voice_pub.publish(self.word_stack[-1])
             # voice_pub.publish(string) # ここで投げる
 
 
