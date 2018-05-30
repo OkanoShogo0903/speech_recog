@@ -31,7 +31,7 @@ Example usage:
 
 from __future__ import division
 
-IS_ROS_ACTIVE = True # !!! ROSの切り替え !!!
+IS_ROS_ACTIVE = False # !!! ROSの切り替え !!!
 
 import re
 import sys
@@ -197,11 +197,11 @@ class WordClass(object):
         例えばdatatime型とかね
         '''
         delete_list = []
-        print("six2 : ",six.PY2)
-        print("six3 : ",six.PY3)
+        #print("six2 : ",six.PY2)
+        #print("six3 : ",six.PY3)
         for key in _dict:
             key_type = (type)(_dict[key])
-            print(key_type)
+            #print(key_type)
             if key_type != bool:
                 if key_type != int:
                     if key_type != str:
@@ -217,10 +217,11 @@ class WordClass(object):
         ''' 辞書から文字列に '''
         # datetime型を含む辞書ではjsonがdatetime型を知らないためにエラーを吐く
         string = json.dumps(_dict)
-        print(self.thread_name," publish : ",type(string),string, self.thread_name)
+        #print(self.thread_name," publish : ",type(string),string, self.thread_name)
 
+        print("word :",self.word_stack[-1]['word'])
         if IS_ROS_ACTIVE:
-            voice_pub.publish(self.word_stack[-1])
+            voice_pub.publish(self.word_stack[-1]['word'])
             # voice_pub.publish(string) # ここで投げる
 
 
@@ -368,7 +369,8 @@ def create_speech_recog_thread():
 def main():
     # See http://g.co/cloud/speech/docs/languages
     # fo#r a list of supported languages.
-    language_code = 'ja-JP'  # a BCP-47 language tag
+    #language_code = 'ja-JP'  # a BCP-47 language tag
+    language_code = 'en-CA'  # a BCP-47 language tag
     client = speech.SpeechClient()
     speech_contexts = [speech.types.SpeechContext(
         phrases=place_hint + command_hint + object_hint
@@ -393,6 +395,8 @@ def main():
 
         # Now, put the transcription responses to use.
         listen_print_loop(responses)
+        #time.sleep(10000)
+        print("ghost----------------------->")
 
 
 #is_kill = False
@@ -423,13 +427,14 @@ def start_function(request):
 
     main_thread_name = threading.currentThread()
     while True:
-        time.sleep(1)
+        time.sleep(2)
     
         tlist = threading.enumerate()
         #if len(tlist) &lt; 2: break
         for t in tlist:
             if t is main_thread_name: continue
-            print (t)
+            #print (t)
+            pass
 
 
 if IS_ROS_ACTIVE:
