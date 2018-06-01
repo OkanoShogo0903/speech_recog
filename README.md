@@ -91,3 +91,12 @@ $ export GOOGLE_APPLICATION_CREDENTIALS='/home/nvidia/My Project 31035-185bec02f
 ~~~
 
 TODO qiitaへの自作メモにリンク貼っとけ
+
+## Warning
+pyaudio0.2.7 -> 正常に動作しないバグを含んでいる。githubのUberi/speech_recognitionのREADMEで述べられている。
+pyaudio0.2.11 -> 正常に動作する
+以下のことを試す。
+
+- `pip install pyaudio==0.2.11`
+    - 無理なら`rm /usr/lib/python2.7/dist-packeages/pyaudio`でpyaudio消して再度pip installしてみて
+- Anacondaの仮想環境下で動作させるのもあるけど、その場合google関連のライブラリがpath通ってないのかエラー吐くのでそのへんはよくわからん
