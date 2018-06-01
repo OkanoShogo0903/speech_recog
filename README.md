@@ -99,4 +99,5 @@ pyaudio0.2.11 -> 正常に動作する
 
 - `pip install pyaudio==0.2.11`
     - 無理なら`rm /usr/lib/python2.7/dist-packeages/pyaudio`でpyaudio消して再度pip installしてみて
+    - `~/.cache/pip`中にあるのを全部消して(キャッシュクリア)しないと指定の0.2.11とかのヴァージョンのライブラリをインストールできない可能性あり
 - Anacondaの仮想環境下で動作させるのもあるけど、その場合google関連のライブラリがpath通ってないのかエラー吐くのでそのへんはよくわからん
