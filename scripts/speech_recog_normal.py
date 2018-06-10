@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
+
 # Copyright 2017 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,26 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Google Cloud Speech APIのsampleをベースにして書かれています
-APIにストリームで音声を渡しています
-
-using pip:
-
-    pip install pyaudio
-
-Example usage:
-    python transcribe_streaming_mic.py
-"""
-
 # [START import_libraries]
 
 from __future__ import division
 
-IS_ROS_ACTIVE = False # !!! ROSの切り替え !!!
-
 import re
 import sys
+# [prameter]------------------->
+IS_ROS_ACTIVE = True # !!! ROSの切り替え !!!
+# <-----------------------------
 if IS_ROS_ACTIVE:
     import rospy
     from std_msgs.msg import String
@@ -57,9 +47,6 @@ RATE = 16000
 CHUNK = int(RATE / 10)  # 100ms
 
 speech_loop = 'Null'
-
-if IS_ROS_ACTIVE == True:
-    voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
 
 # GoogleSpeechAPI Hint
 place_hint = [\
@@ -217,12 +204,13 @@ class WordClass(object):
         ''' 辞書から文字列に '''
         # datetime型を含む辞書ではjsonがdatetime型を知らないためにエラーを吐く
         string = json.dumps(_dict)
-        #print(self.thread_name," publish : ",type(string),string, self.thread_name)
+        print(self.thread_name," publish : ",type(string),string, self.thread_name)
 
         print("word :",self.word_stack[-1]['word'])
-        if IS_ROS_ACTIVE:
-            voice_pub.publish(self.word_stack[-1]['word'])
-            # voice_pub.publish(string) # ここで投げる
+        if IS_ROS_ACTIVE: # ここで投げる
+            voice_pub.publish(self.word_stack[-1]['word'])  # Word only. Simple.
+            #voice_pub_dict.publish(string)                  # Not only word but also time stump and so on.
+            # voice_pub.publish(string)
 
 
     def word_manager(self):
@@ -428,7 +416,7 @@ def start_function(request):
     main_thread_name = threading.currentThread()
     while True:
         time.sleep(2)
-    
+
         tlist = threading.enumerate()
         #if len(tlist) &lt; 2: break
         for t in tlist:
@@ -438,8 +426,13 @@ def start_function(request):
 
 
 if IS_ROS_ACTIVE:
+    # ROS Subscriber
     google_start_sub = rospy.Subscriber('google_req/start',String,start_function)
     google_stop_sub = rospy.Subscriber('google_req/stop',String,CB)
+
+    # ROS Publisher
+    voice_pub = rospy.Publisher('voice_recog',String,queue_size=10)
+    #voice_pub_dict = rospy.Publisher('voice_recog_dict',String,queue_size=1)
 
 
 if __name__ == '__main__':
