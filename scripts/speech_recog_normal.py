@@ -40,6 +40,7 @@ import time
 import types as value_type # typesはgoogle.cloud.speesh import types で使われてるからas使っとく
 import json
 import six
+
 # [END import_libraries]
 
 # Audio recording parameters
@@ -150,7 +151,7 @@ class WordClass(object):
 
         # [よく変えるパラーメータ]
         self.loop_interval = 0.5 # sec
-        self.threshold = timedelta(seconds=1.5)
+        self.threshold = timedelta(seconds=2.5)
         # [よく変えるパラーメータ END]
 
         self.stop_event = threading.Event() #停止させるかのフラグ
@@ -384,7 +385,6 @@ def main():
         # Now, put the transcription responses to use.
         listen_print_loop(responses)
         #time.sleep(10000)
-        print("ghost----------------------->")
 
 
 #is_kill = False

@@ -101,3 +101,10 @@ pyaudio0.2.11 -> 正常に動作する
     - 無理なら`rm /usr/lib/python2.7/dist-packeages/pyaudio`でpyaudio消して再度pip installしてみて
     - `~/.cache/pip`中にあるのを全部消して(キャッシュクリア)しないと指定の0.2.11とかのヴァージョンのライブラリをインストールできない可能性あり
 - Anacondaの仮想環境下で動作させるのもあるけど、その場合google関連のライブラリがpath通ってないのかエラー吐くのでそのへんはよくわからん
+
+## Unknown
+- This message was LabThinkPad
+~~~
+/usr/local/lib/python2.7/dist-packages/urllib3/util/ssl_.py:137: InsecurePlatformWarning: A true SSLContext object is not available. This prevents urllib3 from configuring SSL appropriately and may cause certain SSL connections to fail. You can upgrade to a newer version of Python to solve this. For more information, see https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
+~~~
+
