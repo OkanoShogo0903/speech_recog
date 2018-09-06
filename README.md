@@ -13,41 +13,40 @@ $ sudo pip install --upgrade google-cloud-speech
 $ gcloud auth application-default login
 ~~~
 これでは動作しない場合があって、その時は[このページ](https://qiita.com/j-un/items/dc46b3b766a7afb4080c)を参照
-あと、GOOGLE_APPLICATION_CREDENTIALSの設定
-鍵はメンバーからUSB等でもらうこと
+あと、GOOGLE_APPLICATION_CREDENTIALSの設定.
+鍵はメンバーからUSB等でもらうこと.  
+
+そして、以下の
 ~~~
-`export GOOGLE_APPLICATION_CREDENTIALS=/鍵のPATH`
+export GOOGLE_APPLICATION_CREDENTIALS=鍵のPATH
 ~~~
 
+## RosTopic
+- **音声認識の結果を返すtopic**
+```
+voice_recog
+```
+- **音声認識のon,off**
+```
+google_req/start
+google_req/stop
+```
 ## Using
-PCを二台用意することを想定しています  
-以下の説明では、一方のマイクをつけて音声認識を行うPCをサーバ側、もう一方のPCをクライアント側とします  
-**クライアント側にROSが入っている場合はclient.pyが使用できますが、ROSが入っていない場合はno_ron_test_client.pyが使用できます**  
-
-1. ソースコードのダウンロード
-`$ git clone https://github.com/OkanoShogo0903/speech_recog.git`でソースコードを任意の場所に落とす
-
-2. IPの確認  
-サーバ側で`bash speech_recog/script/show_ip.sh`を実行し、サーバPCのIPを確認  
-
-3. IPの設定  
-サーバ側の`speech_recog/script/server.py`を~~好みのテキストエディタ~~vimで開いて、グローバル変数のipを先ほど確認したipに設定します  
-同様に、クライアント側の`speech_recog/script/client.py`を編集してipを設定します  
-
-4. サーバ側の起動  
-`python speech_recog/script/speech_recog_socket.py`
-(`speech_recog_socket.py`は内部で`server.py`を呼び出している)  
-
-5. クライアント側の起動  
-`client.py`をROSRUNする
-
-## Using
+以下のコードを動かすとRosTopicが出ます.
 ~~~
 $ roscore
-$ rosrun go_get_it_imp VoiceRecognizer.py
-$ rosrun go_get_it_imp GoGetItNode.py
-$ python speech_recog_normal.py
+$ python speech_recog/script/speech_recog_normal.py
 ~~~
+
+## Warning
+pyaudio0.2.7 -> 正常に動作しないバグを含んでいる。githubのUberi/speech_recognitionのREADMEで述べられている。
+pyaudio0.2.11 -> 正常に動作する
+以下のことを試す。
+
+- `pip install pyaudio==0.2.11`
+    - 無理なら`rm /usr/lib/python2.7/dist-packeages/pyaudio`でpyaudio消して再度pip installしてみて
+    - `~/.cache/pip`中にあるのを全部消して(キャッシュクリア)しないと指定の0.2.11とかのヴァージョンのライブラリをインストールできない可能性あり
+- Anacondaの仮想環境下で動作させるのもあるけど、その場合google関連のライブラリがpath通ってないのかエラー吐くのでそのへんはよくわからん
 
 ## Error
 - ネットワークエラー集
@@ -92,18 +91,9 @@ $ export GOOGLE_APPLICATION_CREDENTIALS='/home/nvidia/My Project 31035-185bec02f
 
 TODO qiitaへの自作メモにリンク貼っとけ
 
-## Warning
-pyaudio0.2.7 -> 正常に動作しないバグを含んでいる。githubのUberi/speech_recognitionのREADMEで述べられている。
-pyaudio0.2.11 -> 正常に動作する
-以下のことを試す。
-
-- `pip install pyaudio==0.2.11`
-    - 無理なら`rm /usr/lib/python2.7/dist-packeages/pyaudio`でpyaudio消して再度pip installしてみて
-    - `~/.cache/pip`中にあるのを全部消して(キャッシュクリア)しないと指定の0.2.11とかのヴァージョンのライブラリをインストールできない可能性あり
-- Anacondaの仮想環境下で動作させるのもあるけど、その場合google関連のライブラリがpath通ってないのかエラー吐くのでそのへんはよくわからん
-
 ## Unknown
-- This message was LabThinkPad
+- This Warning happen in LabThinkPad
+
 ~~~
 /usr/local/lib/python2.7/dist-packages/urllib3/util/ssl_.py:137: InsecurePlatformWarning: A true SSLContext object is not available. This prevents urllib3 from configuring SSL appropriately and may cause certain SSL connections to fail. You can upgrade to a newer version of Python to solve this. For more information, see https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
 ~~~
